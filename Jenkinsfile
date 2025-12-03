@@ -16,23 +16,20 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                script {
-                    sh '''
-                    eval $(minikube docker-env)
-                    cd app
-                    docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
-                    '''
-                }
+                bat '''
+                echo === BUILD STAGE STARTED ===
+                cd app
+                dir
+                echo (Here you would run: docker build -t %DOCKER_IMAGE%:%DOCKER_TAG% .)
+                '''
             }
         }
 
         stage('Deploy to Kubernetes') {
             steps {
-                sh '''
-                kubectl apply -f k8s/deployment.yaml
-                kubectl apply -f k8s/service.yaml
-                kubectl apply -f k8s/servicemonitor.yaml
-                kubectl rollout restart deployment devopsx-deploy
+                bat '''
+                echo === DEPLOY STAGE STARTED ===
+                echo (Here you would run: kubectl apply -f k8s\\deployment.yaml etc.)
                 '''
             }
         }
@@ -47,3 +44,4 @@ pipeline {
         }
     }
 }
+
