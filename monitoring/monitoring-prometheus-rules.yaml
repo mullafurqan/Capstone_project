@@ -1,0 +1,33 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: devopsx-rules
+  labels:
+    release: monitoring       # must match your kube-prometheus-stack Helm release name
+spec:
+  groups:
+    - name: devopsx.rules
+      rules:
+        - alert: DevOpsXDeploymentDown
+          expr: kube_deployment_status_replicas_available{deployment="devopsx-deploy"} < 1
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "DevOpsX deployment has no available replicas"
+            description: "Deployment devopsx-deploy in namespace {{ $labels.namespace }} has 0 available pods for more than 2 minutes."
+
+        - alert: DevOpsXHighErrorRate
+          expr: |
+            sum(rate(devopsx_http_requests_total{route!="/metrics"}[5m])) > 0
+            and (
+              sum(rate(devopsx_http_requests_total{status=~"5.."}[5m]))
+              /
+              sum(rate(devopsx_http_requests_total{route!="/metrics"}[5m]))
+            ) > 0.05
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High HTTP 5xx error rate for DevOpsX"
+            description: "More than 5% of DevOpsX HTTP requests are 5xx errors over the last 5 minutes."
